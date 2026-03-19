@@ -142,7 +142,7 @@ export default function DevPage() {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="container mx-auto px-4 py-12 max-w-7xl">
-      {/* Dynamic Command Header */}
+      {/* Admin Dashboard Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 mb-16">
         <div className="flex items-center gap-6">
           <div className="p-4 rounded-3xl bg-violet/10 text-violet shadow-inner border border-white/5 relative group">
@@ -150,13 +150,13 @@ export default function DevPage() {
             <div className="absolute inset-0 bg-violet/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
           <div>
-            <h1 className="text-5xl font-black text-white tracking-tighter uppercase italic leading-none truncate">Command <span className="text-violet text-glow">Center</span></h1>
+            <h1 className="text-5xl font-black text-white tracking-tighter uppercase italic leading-none truncate">Admin <span className="text-violet">Dashboard</span></h1>
             <div className="flex items-center gap-3 mt-3">
               <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-black tracking-widest border border-emerald-500/20">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Live Telemetry
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> Authorized
               </div>
               <button onClick={handleLogout} className="text-[10px] font-black text-neutral-500 hover:text-white uppercase tracking-widest flex items-center gap-1 transition-colors">
-                <LogOut className="w-3 h-3" /> Terminate Session
+                <LogOut className="w-3 h-3" /> Exit
               </button>
             </div>
           </div>
@@ -311,10 +311,10 @@ function SystemTab({ config, update, isSyncing, isAnnouncing, setIsAnnouncing })
                        <span className="text-[10px] font-black text-neutral-600 uppercase tracking-widest">Expires in: <span className="text-white">{timeLeft}m</span></span>
                     </div>
                     <button 
-                      onClick={() => update('system_message', null)}
+                      onClick={() => update('system_message', {})}
                       className="px-8 py-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-500 font-black text-[10px] uppercase tracking-[0.3em] hover:bg-red-500 hover:text-white transition-all shadow-lg active:scale-95"
                     >
-                      Stop
+                      Terminate
                     </button>
                  </div>
                </>
@@ -325,20 +325,20 @@ function SystemTab({ config, update, isSyncing, isAnnouncing, setIsAnnouncing })
              <>
                <div className="relative z-10">
                   <div className="flex items-center justify-between mb-8">
-                     <h3 className="text-xl font-black text-white uppercase tracking-tight italic">Global <span className="text-violet">Broadcast Hub</span></h3>
+                     <h3 className="text-xl font-black text-white uppercase tracking-tight italic">System <span className="text-violet">Notifications</span></h3>
                      <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-violet/10 border border-violet/20 text-violet text-[9px] font-black tracking-widest uppercase">
-                        <Globe className="w-3 h-3" /> Real-time Network
+                        <Globe className="w-3 h-3" /> Live Management
                      </div>
                   </div>
                   <p className="text-neutral-500 text-xs font-medium leading-relaxed max-w-md mb-10">
-                     Deploy system-wide announcements with custom alerts, expiration timers, and stylized banners across the entire 4Aura network.
+                     Deploy network-wide notifications with custom durations and style presets for all active users.
                   </p>
                </div>
                <button 
                  onClick={() => setIsAnnouncing(true)}
                  className="relative z-10 w-full py-5 rounded-2xl bg-violet text-white font-black text-xs uppercase tracking-[0.3em] shadow-xl shadow-violet/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-4"
                >
-                 <Zap className="w-5 h-5 fill-white" /> Send Global Announcement
+                 <Zap className="w-5 h-5 fill-white" /> Create Announcement
                </button>
              </>
            )

@@ -7,7 +7,7 @@
   },
   "navbar": {
     "searchPlaceholder": "Search anime, studios, genres...",
-    "recommend": "AI Recommend",
+    "recommend": "Recommendations",
     "watchlist": "My Library",
     "settings": "Dashboard Settings"
   },
@@ -92,10 +92,10 @@
   "footer": {
     "description": "the best site ever.",
     "explore": "Explore 4Aura",
-    "premiumStatus": "PREMIUM CLOUD STATUS",
-    "alphaProgram": "ALPHA ACCESS PROGRAM",
-    "joinWaitlist": "Join the community for exclusive features and early access to the next generation of 4Aura.",
-    "waitlistButton": "Join the Community Now",
+    "premiumStatus": "PLATFORM STATUS",
+    "alphaProgram": "AURA COMMUNITY",
+    "joinWaitlist": "Join the community to stay updated on the latest news and features.",
+    "waitlistButton": "Join the Community",
     "craftedWith": "Crafted with passion for the global anime community.",
     "copyright": "2026 4Aura. All rights reserved."
   }

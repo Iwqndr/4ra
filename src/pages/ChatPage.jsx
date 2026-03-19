@@ -129,6 +129,12 @@ export default function ChatPage() {
   const [showSettings, setShowSettings] = useState(false);
   const [contextMenu, setContextMenu] = useState(null);
   const [typingUsers, setTypingUsers] = useState(new Set());
+  const [replyingTo, setReplyingTo] = useState(null);
+  const [editingMessageId, setEditingMessageId] = useState(null);
+  const [editText, setEditText] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showingEmojiFor, setShowingEmojiFor] = useState(null);
+  const [showScrollBottom, setShowScrollBottom] = useState(false);
 
   const scrollRef = useRef(null);
   const typingTimeoutRef = useRef(null);
@@ -232,6 +238,37 @@ export default function ChatPage() {
     return () => { supabase.removeChannel(sub); };
   }, [activeChannel, user]);
 
+  const deleteMessage = async (msgId) => {
+    const { error } = await supabase.from('messages').delete().eq('id', msgId).eq('user_id', user.id);
+    if (error) customAlert("Error", "Could not delete message.");
+  };
+
+  const addReaction = async (msgId, emoji) => {
+    const msg = messages.find(m => m.id === msgId);
+    const reactions = { ...(msg.reactions || {}) };
+    reactions[emoji] = (reactions[emoji] || 0) + 1;
+    
+    // Optimistic Update
+    setMessages(prev => prev.map(m => m.id === msgId ? { ...m, reactions } : m));
+    
+    await supabase.from('messages').update({ reactions }).eq('id', msgId);
+  };
+
+  const formatMessage = (text) => {
+    if (!text) return '';
+    // Simple regex for bold, italic, code, and mentions
+    return text
+      .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em class="text-neutral-400">$1</em>')
+      .replace(/`(.*?)`/g, '<code class="bg-white/10 px-1.5 py-0.5 rounded font-mono text-[13px]">$1</code>')
+      .replace(/(@\w+)/g, '<span class="text-sky-400 font-bold hover:underline cursor-pointer">$1</span>');
+  };
+
+  const handleScroll = (e) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.target;
+    setShowScrollBottom(scrollHeight - scrollTop - clientHeight > 300);
+  };
+
   useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }, [messages, typingUsers]);
 
   const hasPermission = (perm) => {
@@ -250,26 +287,20 @@ export default function ChatPage() {
     setNewMessage('');
     sendTypingStatus(false);
     
-    // AI Interaction
-    if (content.startsWith('@AI')) {
-        addDebugLog('Triggering @AI Response', 'info');
-        const aiResponse = await getGroqResponse(content.replace('@AI', '').trim());
-        await supabase.from('messages').insert([{
-            user_id: '4aura-ai', 
-            user_name: '4Aura AI', 
-            user_avatar: 'https://img.icons8.com/isometric/512/artificial-intelligence.png',
-            content: aiResponse, 
-            room_id: activeChannel.id === 'global' ? 'global' : null,
-            channel_id: activeChannel.id === 'global' ? null : activeChannel.id,
-            server_id: activeServer?.id === 'global' ? null : activeServer?.id
-        }]);
-    }
-
     // User Message
-    const metadata = { 
-      room_id: activeChannel.id === 'global' ? 'global' : null,
-      channel_id: activeChannel.id === 'global' ? null : activeChannel.id 
-    };
+  const editMessage = async (msgId) => {
+    if (!editText.trim()) return;
+    const { error } = await supabase.from('messages').update({ content: editText }).eq('id', msgId).eq('user_id', user.id);
+    if (!error) {
+        setMessages(prev => prev.map(m => m.id === msgId ? { ...m, content: editText } : m));
+        setEditingMessageId(null);
+    }
+  };
+
+  const filteredMessages = messages.filter(m => 
+    m.content?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    m.user_name?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
     addDebugLog('Attempting DB Insert', 'info', metadata);
 
     const { data, error } = await supabase.from('messages').insert([{
@@ -279,7 +310,8 @@ export default function ChatPage() {
       content: content, 
       room_id: activeChannel.id === 'global' ? 'global' : null,
       channel_id: activeChannel.id === 'global' ? null : activeChannel.id,
-      server_id: activeServer?.id === 'global' ? null : activeServer?.id
+      server_id: activeServer?.id === 'global' ? null : activeServer?.id,
+      reply_to: replyingTo?.id || null
     }]).select();
 
     if (error) {
@@ -287,6 +319,7 @@ export default function ChatPage() {
        customAlert("Broadcast Failed", error.message, 'danger');
     } else {
        addDebugLog('Insert Success', 'info', data);
+       setReplyingTo(null);
     }
   };
 
@@ -326,7 +359,7 @@ export default function ChatPage() {
         closeServerModal();
         navigate(`/server/${server.id}`);
     } else {
-        customAlert("Forge Failed", "Failed to forge hub. Unique name required.", 'danger');
+        customAlert("Action Failed", "Failed to create group. Unique name required.", 'danger');
     }
   };
 
@@ -338,7 +371,7 @@ export default function ChatPage() {
       closeServerModal();
       navigate(`/server/${existingServer.id}`);
     } else {
-      customAlert("Teleport Error", "Failed to teleport. Policy check suggested.", 'danger');
+      customAlert("Join Error", "Failed to join group. Policy check suggested.", 'danger');
     }
   };
 
@@ -355,7 +388,7 @@ export default function ChatPage() {
   const leaveServer = async (srvId) => {
     const { error } = await supabase.from('server_members').delete().eq('server_id', srvId).eq('user_id', user.id);
     if (!error) { setServers(prev => prev.filter(s => s.id !== srvId)); if (serverIdParam === srvId) navigate('/chat'); }
-    else { customAlert("Exit Failed", `Failed to leave: ${error.message}`, 'danger'); }
+    else { customAlert("Failed", `Failed to leave: ${error.message}`, 'danger'); }
     setContextMenu(null);
   };
 
@@ -479,7 +512,17 @@ export default function ChatPage() {
                 <p className="text-[9px] font-bold text-neutral-600 uppercase tracking-widest leading-none">COMMUNICATION NODE</p>
              </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-6">
+             <div className="relative group">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-600 group-focus-within:text-sky-500 transition-colors" />
+                <input 
+                  type="text" 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search logs..." 
+                  className="bg-white/[0.03] border border-white/5 rounded-xl py-2 pl-9 pr-4 text-xs font-bold text-white focus:outline-none focus:border-sky-500/30 w-48 transition-all focus:w-64"
+                />
+             </div>
              <button onClick={() => setShowMemberSidebar(!showMemberSidebar)} className={`p-2.5 rounded-xl transition-all ${showMemberSidebar ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/20' : 'text-neutral-500 hover:text-white hover:bg-white/5'}`}>
                 <Users className="w-5 h-5" />
              </button>
@@ -487,48 +530,205 @@ export default function ChatPage() {
         </header>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-10 space-y-8 no-scrollbar scroll-smooth" ref={scrollRef}>
-          {messages.length === 0 ? (
+        <div 
+          className="flex-1 overflow-y-auto p-10 space-y-8 no-scrollbar scroll-smooth relative" 
+          ref={scrollRef}
+          onScroll={handleScroll}
+        >
+          {/* Scroll to Bottom FAB */}
+          <AnimatePresence>
+            {showScrollBottom && (
+              <motion.button 
+                initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                onClick={() => scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })}
+                className="fixed bottom-32 right-12 z-40 p-3 rounded-full bg-sky-500 text-white shadow-2xl hover:bg-sky-400 transition-all flex items-center gap-2 group"
+              >
+                <div className="text-[9px] font-black uppercase tracking-widest px-2 opacity-0 group-hover:opacity-100 transition-opacity w-0 group-hover:w-auto overflow-hidden">New Messages</div>
+                <ChevronDown className="w-5 h-5" />
+              </motion.button>
+            )}
+          </AnimatePresence>
+          {filteredMessages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center p-10 opacity-30 select-none">
                <div className="w-24 h-24 rounded-[40px] bg-white/[0.02] flex items-center justify-center mb-8 border border-white/5"><MessageSquarePlus className="w-10 h-10 text-sky-500" /></div>
-               <h3 className="text-xl font-black text-white tracking-tighter uppercase italic mb-3">Quiet before the storm</h3>
-               <p className="text-xs font-bold text-neutral-500 leading-relaxed uppercase tracking-widest">Share a link or describe your vibe to start the broadcast.</p>
+               <h3 className="text-xl font-black text-white tracking-tighter uppercase italic mb-3">{searchQuery ? 'No results found' : 'Silent Corridor'}</h3>
+               <p className="text-xs font-bold text-neutral-500 leading-relaxed uppercase tracking-widest">{searchQuery ? 'Try a different search term.' : 'The board is clear. Initiate the first connection.'}</p>
             </div>
           ) : (
-            messages.map((msg, i) => (
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} key={msg.id} className="flex gap-4 group">
-                <div className="w-11 h-11 rounded-[16px] overflow-hidden shrink-0 border border-white/5 group-hover:scale-110 transition-transform bg-white/5 cursor-pointer">
+            filteredMessages.map((msg, i) => {
+              const replyTarget = msg.reply_to ? messages.find(m => m.id === msg.reply_to) : null;
+              return (
+                <motion.div 
+                  initial={{ opacity: 0, x: -10 }} 
+                  animate={{ opacity: 1, x: 0 }} 
+                  key={msg.id} 
+                  className={`flex gap-4 group relative hover:bg-white/[0.01] -mx-10 px-10 py-2 transition-all transition-colors ${msg.reply_to ? 'mt-8' : ''}`}
+                  onMouseLeave={() => setShowingEmojiFor(null)}
+                >
+                  {/* Reply Reference Line */}
+                  {replyTarget && (
+                    <div className="absolute top-[-24px] left-[34px] w-8 h-8 border-l-2 border-t-2 border-white/5 rounded-tl-xl pointer-events-none" />
+                  )}
+
+                  {/* Reply Preview Above Message */}
+                  {replyTarget && (
+                    <div className="absolute top-[-28px] left-[74px] flex items-center gap-2 opacity-50 group-hover:opacity-100 transition-opacity cursor-pointer whitespace-nowrap overflow-hidden max-w-[80%]">
+                       <div className="w-4 h-4 rounded-md overflow-hidden border border-white/10">
+                          <img src={replyTarget.user_avatar} className="w-full h-full object-cover" alt="" />
+                       </div>
+                       <span className="text-[10px] font-black text-white/40">{replyTarget.user_name}</span>
+                       <span className="text-[10px] font-medium text-neutral-500 truncate italic">{replyTarget.content}</span>
+                    </div>
+                  )}
+                {/* User Avatar */}
+                <div className="w-10 h-10 rounded-2xl overflow-hidden shrink-0 border border-white/5 group-hover:scale-105 transition-transform bg-white/5 cursor-pointer relative shadow-2xl">
                    <img src={msg.user_avatar || 'https://via.placeholder.com/150'} className="w-full h-full object-cover" alt="" />
                 </div>
-                <div className="min-w-0 flex-1">
-                   <div className="flex items-center gap-3 mb-1.5">
-                      <span className="text-[14px] font-black text-neutral-400 hover:text-sky-400 cursor-pointer transition-colors tracking-tight">{msg.user_name}</span>
-                      <span className="text-[9px] font-bold text-neutral-700 uppercase tracking-widest">{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+
+                {/* Message Content Area */}
+                <div className="min-w-0 flex-1 relative">
+                   <div className="flex items-center gap-3 mb-1.5 pt-0.5">
+                      <span className="text-[13px] font-black text-white/50 hover:text-sky-400 cursor-pointer transition-colors tracking-tighter" title={new Date(msg.created_at).toLocaleString()}>
+                        {msg.user_name}
+                      </span>
+                      <span 
+                        className="text-[8px] font-black text-neutral-800 uppercase tracking-widest bg-white/[0.03] px-2 py-0.5 rounded-full border border-white/5 cursor-help"
+                        title={new Date(msg.created_at).toLocaleString()}
+                      >
+                        {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                      {msg.user_id === '4aura-ai' && <div className="px-2 py-0.5 rounded-md bg-violet/20 border border-violet/30 text-violet text-[7px] font-black uppercase tracking-widest">System</div>}
                    </div>
-                   <div className="text-[15px] font-medium text-neutral-300 leading-relaxed selection:bg-sky-500/30">
-                      {msg.content}
+
+                   <div className="relative inline-block max-w-full">
+                      {editingMessageId === msg.id ? (
+                        <div className="space-y-3 mt-2">
+                          <textarea 
+                            value={editText}
+                            onChange={(e) => setEditText(e.target.value)}
+                            className="w-full bg-neutral-800 border border-sky-500/50 rounded-xl p-4 text-sm text-white focus:outline-none"
+                            rows={3}
+                          />
+                          <div className="flex justify-end gap-2">
+                            <button onClick={() => setEditingMessageId(null)} className="px-4 py-2 rounded-lg bg-white/5 text-[10px] font-black uppercase text-neutral-400 hover:text-white transition-all">Cancel</button>
+                            <button onClick={() => editMessage(msg.id)} className="px-4 py-2 rounded-lg bg-sky-500 text-[10px] font-black uppercase text-white hover:bg-sky-400 transition-all">Save Changes</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div 
+                          className="text-[14.5px] font-medium text-neutral-300 leading-relaxed selection:bg-sky-500/30 break-words whitespace-pre-wrap"
+                          dangerouslySetInnerHTML={{ __html: formatMessage(msg.content) }}
+                        />
+                      )}
+
+                      {/* Reactions Display */}
+                      {msg.reactions && Object.keys(msg.reactions).length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mt-3">
+                          {Object.entries(msg.reactions).map(([emoji, count]) => (
+                            <button key={emoji} className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-sky-500/10 border border-sky-500/20 text-[10px] hover:bg-sky-500/20 transition-colors">
+                              <span>{emoji}</span>
+                              <span className="font-black text-sky-400">{count}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
                    </div>
-                   {msg.rich_metadata && <RichLinkCard metadata={msg.rich_metadata} url={msg.content} />}
+
+                   {/* Rich Metadata (Link Cards) */}
+                   {msg.metadata && <RichLinkCard metadata={msg.metadata} url={msg.content} />}
+                </div>
+
+                {/* Hover Actions Menu */}
+                <div className="absolute right-10 top-2 opacity-0 group-hover:opacity-100 transition-all transform translate-y-1 group-hover:translate-y-0 flex items-center gap-1 bg-[#0B0C0E] border border-white/10 p-1 rounded-xl shadow-2xl z-20">
+                   {/* Emoji Popover Trigger */}
+                   <div className="relative">
+                      <button 
+                        onClick={() => setShowingEmojiFor(showingEmojiFor === msg.id ? null : msg.id)}
+                        className="p-2 rounded-lg hover:bg-white/5 text-neutral-500 hover:text-white transition-all" 
+                        title="React"
+                      >
+                        <Zap className="w-3.5 h-3.5" />
+                      </button>
+                      <AnimatePresence>
+                        {showingEmojiFor === msg.id && (
+                          <motion.div 
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            className="absolute bottom-full right-0 mb-2 p-2 bg-[#111214] border border-white/10 rounded-xl flex gap-1 shadow-2xl"
+                          >
+                            {['🔥', '❤️', '😂', '😮', '😢', '👍'].map(emoji => (
+                              <button key={emoji} onClick={() => { addReaction(msg.id, emoji); setShowingEmojiFor(null); }} className="p-1.5 hover:bg-white/10 rounded-lg transition-all text-sm">{emoji}</button>
+                            ))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                   </div>
+                   
+                   <button 
+                     onClick={() => setReplyingTo(msg)}
+                     className="p-2 rounded-lg hover:bg-white/5 text-neutral-500 hover:text-white transition-all" 
+                     title="Reply"
+                   >
+                     <MessageSquare className="w-3.5 h-3.5" />
+                   </button>
+                   <button 
+                     onClick={() => { setEditingMessageId(msg.id); setEditText(msg.content); }}
+                     className="p-2 rounded-lg hover:bg-white/5 text-neutral-500 hover:text-white transition-all" 
+                     title="Edit"
+                   >
+                     <Settings className="w-3.5 h-3.5" />
+                   </button>
+                   {msg.user_id === user.id && (
+                     <button onClick={() => deleteMessage(msg.id)} className="p-2 rounded-lg hover:bg-red-500/10 text-neutral-500 hover:text-red-500 transition-all" title="Delete"><Trash2 className="w-3.5 h-3.5" /></button>
+                   )}
                 </div>
               </motion.div>
-            ))
-          )}
-        </div>
+            );
+          })
+        )}
+      </div>
 
         {/* Chat Input */}
         <footer className="p-8 pb-10">
-            <form onSubmit={sendMessage} className="relative group max-w-5xl mx-auto">
+            {/* Reply Bar */}
+            <AnimatePresence>
+              {replyingTo && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }} 
+                  animate={{ opacity: 1, y: 0 }} 
+                  exit={{ opacity: 0, y: 10 }}
+                  className="flex items-center justify-between px-6 py-3 bg-white/5 border border-white/5 rounded-t-[20px] mb-[-10px] mx-auto max-w-5xl relative z-0 backdrop-blur-xl"
+                >
+                  <div className="flex items-center gap-3 overflow-hidden">
+                    <MessageSquare className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+                    <span className="text-[11px] font-bold text-neutral-500 truncate italic">Replying to <span className="text-white not-italic">{replyingTo.user_name}</span></span>
+                  </div>
+                  <button onClick={() => setReplyingTo(null)} className="p-1 hover:bg-white/10 rounded-full transition-colors">
+                    <X className="w-3 h-3 text-neutral-500" />
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <form onSubmit={sendMessage} className="relative group max-w-5xl mx-auto z-10">
                <div className="absolute -inset-1 bg-gradient-to-r from-sky-500 to-fuchsia-500 rounded-[28px] blur opacity-0 group-focus-within:opacity-20 transition duration-1000 group-hover:opacity-10" />
                <input
                   type="text"
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder={`Broadcast to #${activeChannel?.name}...`}
+                  placeholder={`Message #${activeChannel?.name}...`}
                   className="relative w-full px-8 py-5 pr-20 rounded-[24px] bg-neutral-900 border border-white/5 text-white placeholder:text-neutral-700 focus:outline-none focus:border-sky-500/50 text-[15px] font-bold transition-all shadow-2xl"
                />
                <button type="submit" className="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-2xl bg-white text-black hover:bg-sky-500 hover:text-white transition-all shadow-xl active:scale-90 disabled:opacity-20 cursor-pointer">
                   <Send className="w-5 h-5" />
                </button>
+               <div className="absolute right-20 top-1/2 -translate-y-1/2 hidden group-focus-within:flex items-center gap-3 text-[9px] font-black uppercase tracking-[0.2em] text-white/20 select-none">
+                 <span>**bold**</span>
+                 <span>_italic_</span>
+                 <span>`code`</span>
+               </div>
             </form>
         </footer>
       </section>
@@ -539,7 +739,7 @@ export default function ChatPage() {
           <motion.aside initial={{ width: 0, opacity: 0 }} animate={{ width: 280, opacity: 1 }} exit={{ width: 0, opacity: 0 }} className="shrink-0 bg-black/40 backdrop-blur-3xl border-l border-white/5 z-30 select-none overflow-hidden">
              <div className="p-10 pb-4 h-full flex flex-col">
                 <div className="mb-10">
-                   <span className="text-[10px] font-black text-neutral-600 uppercase tracking-[0.4em] mb-6 block">Soul Network — {members.length}</span>
+                   <span className="text-[10px] font-black text-neutral-600 uppercase tracking-[0.4em] mb-6 block">Community Members — {members.length}</span>
                 </div>
                 <div className="space-y-6 flex-1 overflow-y-auto no-scrollbar">
                   {members.map(member => (
@@ -646,7 +846,7 @@ export default function ChatPage() {
              <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="w-full max-w-sm bg-white rounded-[40px] p-10 shadow-2xl text-center relative overflow-hidden">
                 <button onClick={closeServerModal} className="absolute top-6 right-6 p-2 rounded-full hover:bg-neutral-100 text-neutral-400 transition-colors"><X className="w-4 h-4" /></button>
                 <div className="w-14 h-14 rounded-2xl bg-sky-50 flex items-center justify-center text-sky-500 mx-auto mb-6"><Globe className="w-7 h-7" /></div>
-                <h3 className="text-2xl font-black text-neutral-900 tracking-tight mb-8 uppercase">New Hub</h3>
+                <h3 className="text-2xl font-black text-neutral-900 tracking-tight mb-8 uppercase">New Group</h3>
                 <input autoFocus type="text" value={newServerName} onChange={(e) => handleServerNameChange(e.target.value)} placeholder="Anime syndicate..." className="w-full px-6 py-5 rounded-2xl bg-neutral-100 border border-transparent text-neutral-900 font-bold focus:bg-white focus:border-sky-500 transition-all text-center mb-8" />
                 <AnimatePresence mode="wait">
                    {serverCheckStatus === 'exists' && (

@@ -9,7 +9,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8">
           
           {/* Brand Section */}
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-6 lg:col-span-2">
             <Link to="/" className="flex items-center gap-3 group">
               <div className="p-2.5 rounded-2xl bg-gradient-to-br from-accent to-accent shadow-lg shadow-accent/20 group-hover:scale-110 transition-transform duration-500">
                 <Sparkles className="w-5 h-5 text-white fill-current" />
@@ -53,20 +53,6 @@ export default function Footer() {
               <a href="https://anilist.co" target="_blank" className="text-sm font-bold text-neutral-500 hover:text-blue-400 transition-colors">AniList v2</a>
               <a href="#" className="text-sm font-bold text-neutral-500 hover:text-white transition-colors">Documentation</a>
             </nav>
-          </div>
-
-          {/* Newsletter / CTA */}
-          <div className="flex flex-col gap-6">
-            <h4 className="text-[10px] font-black text-white uppercase tracking-[0.4em]">{uiStrings.footer.premiumStatus}</h4>
-            <div className="p-6 rounded-[32px] glass-dark border border-white/5 relative overflow-hidden group">
-               <div className="absolute top-0 right-0 w-24 h-24 bg-violet/5 blur-2xl rounded-full -mr-8 -mt-8" />
-               <p className="text-[11px] font-black text-neutral-400 uppercase tracking-widest leading-relaxed relative z-10">
-                 {uiStrings.footer.alphaProgram}
-               </p>
-               <button className="mt-6 w-full py-4 rounded-2xl bg-white text-black text-[10px] font-black uppercase tracking-widest hover:bg-violet hover:text-white transition-all duration-500 shadow-xl relative z-10 active:scale-95">
-                 {uiStrings.footer.joinWaitlist}
-               </button>
-            </div>
           </div>
 
         </div>
