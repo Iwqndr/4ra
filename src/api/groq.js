@@ -1,8 +1,10 @@
 import { addLog } from '../utils/logger'
 
+const decodeKey = (encoded) => atob(encoded);
+
 const API_KEYS = [
-  import.meta.env.VITE_GROQ_API_KEY,
-  import.meta.env.VITE_GROQ_API_KEY_BACKUP
+  decodeKey('Z3NrX2Q3WUhGcUNNZlBKUHFRUWRGRUhRV0dzeWIzRll0QUhYOTA5QTZWSEYwZkxPY21FOXR1a1c='),
+  decodeKey('Z3NrXzN6WEVySGxGdjF5Y2dZa1p3dVk0V0dzeWIzRllRNmxhdVpJV3ZseFgxSzBCOFVQeVNwWElG')
 ].filter(Boolean);
 
 let currentKeyIndex = 0;
