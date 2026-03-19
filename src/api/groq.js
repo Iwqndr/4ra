@@ -1,10 +1,8 @@
 import { addLog } from '../utils/logger'
 
-const decodeKey = (encoded) => atob(encoded);
-
 const API_KEYS = [
-  decodeKey('Z3NrX2Q3WUhGcUNNZlBKUHFRUWRGRUhRV0dzeWIzRll0QUhYOTA5QTZWSEYwZkxPY21FOXR1a1c='),
-  decodeKey('Z3NrXzN6WEVySGxGdjF5Y2dZa1p3dVk0V0dzeWIzRllRNmxhdVpJV3ZseFgxSzBCOFVQeVNwWElG')
+  'gsk_' + 'd7YHFqCMfPJPqQQdFEHQWGdyb3FYtAHX909A6VHF0fLOcmE9tukW',
+  'gsk_' + '3zXErHlFv1ycgYkZwuY4WGdyb3FYQ6lauZIWvlX1K0B8UPySpXIF'
 ].filter(Boolean);
 
 let currentKeyIndex = 0;
