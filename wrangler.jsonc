@@ -2,6 +2,22 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "4ra",
   "compatibility_date": "2026-03-18",
+  "main": "worker/chat.mjs",
+  "compatibility_flags": ["durable_object_sqlite"],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "CHAT_ROOM",
+        "class_name": "ChatRoom"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_classes": ["ChatRoom"]
+    }
+  ],
   "assets": {
     "directory": "./dist"
   }

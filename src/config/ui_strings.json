@@ -1,0 +1,102 @@
+{
+  "common": {
+    "appName": "4Aura",
+    "tagline": "hey guys - fourhrt",
+    "backToBrowse": "Back to Browse",
+    "cancel": "Cancel"
+  },
+  "navbar": {
+    "searchPlaceholder": "Search anime, studios, genres...",
+    "recommend": "AI Recommend",
+    "watchlist": "My Library",
+    "settings": "Dashboard Settings"
+  },
+  "home": {
+    "featuredTitle": "Featured Spotlight",
+    "trendingTitle": "Trending Now",
+    "genreSpotlight": "Genre Spotlight",
+    "resultsFor": "Results for",
+    "nowTrending": "Now Trending",
+    "exploreGenres": "Explore Genres",
+    "loadMore": "Load More Content",
+    "heroStartWatching": "View Details",
+    "heroAddToList": "Add to List",
+    "heroSaved": "Saved",
+    "heroCollection": "Spring 2024 Collection"
+  },
+  "detail": {
+    "quickInfo": "Quick Info",
+    "addToCollection": "Add to Collection",
+    "inCollection": "In Your Collection",
+    "shareAnime": "Share Anime",
+    "careerRoles": "Career Roles"
+  },
+  "share": {
+    "title": "Share Anime",
+    "description": "Spread the word about 4Aura",
+    "directLink": "Direct Link",
+    "copy": "Copy",
+    "copied": "Copied"
+  },
+  "filter": {
+    "title": "Genre Selector"
+  },
+  "settings": {
+    "dashboard": "DASHBOARD",
+    "subtitle": "Profile & System Controls",
+    "tabs": {
+      "profile": "Profile",
+      "general": "General",
+      "security": "Security",
+      "sessions": "Sessions",
+      "preferences": "Preferences",
+      "privacy": "Privacy"
+    },
+    "profile": {
+      "title": "Profile Editor",
+      "handle": "Display Handle",
+      "language": "Sync Language",
+      "bio": "Signature Bio",
+      "origin": "Origin",
+      "digitalField": "Digital Field",
+      "unsaved": "Unsaved local changes detected",
+      "commit": "Commit Changes",
+      "placeholderHandle": "How should we call you?",
+      "placeholderBio": "Your cinematic story starts here...",
+      "placeholderOrigin": "Neo Tokyo"
+    },
+    "summary": {
+      "watched": "Added to List",
+      "episodes": "Episodes"
+    },
+    "general": {
+      "title": "System Environment",
+      "coreInterface": "Core Interface",
+      "interfaceDesc": "Choose between High-Contrast Dark and Elegant Dim themes.",
+      "premiumDark": "Premium Dark",
+      "softLight": "Soft Light",
+      "globalLocale": "Global Locale",
+      "localeDesc": "Sets the default language for all title metadata and UI text.",
+      "cloudPatching": "Cloud Patching",
+      "cloudDesc": "Automatically fetch and apply the latest UI components on boot."
+    },
+    "preferences": {
+      "title": "Metadata Preferences"
+    },
+    "development": {
+      "title": "MODULE UNDER DEVELOPMENT",
+      "subtitle": "Architecting advanced security protocols for the next generation of 4Aura",
+      "return": "Return to Profile"
+    }
+  },
+  "footer": {
+    "description": "the best site ever.",
+    "explore": "Explore 4Aura",
+    "premiumStatus": "PREMIUM CLOUD STATUS",
+    "alphaProgram": "ALPHA ACCESS PROGRAM",
+    "joinWaitlist": "Join the community for exclusive features and early access to the next generation of 4Aura.",
+    "waitlistButton": "Join the Community Now",
+    "craftedWith": "Crafted with passion for the global anime community.",
+    "copyright": "2026 4Aura. All rights reserved."
+  }
+}

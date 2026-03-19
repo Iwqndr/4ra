@@ -1,12 +1,14 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowUpDown, TrendingUp, Star, Clock, Sparkles } from 'lucide-react'
 import { fetchTopAnime, searchAnime, fetchAnimeByGenre } from '../api/jikan'
 import AnimeCard from '../components/AnimeCard'
 import { SkeletonGrid } from '../components/SkeletonCard'
 import Hero from '../components/Hero'
 import TrendingSidebar from '../components/TrendingSidebar'
+import uiStrings from '../config/ui_strings.json'
+import { useSettings } from '../context/SettingsContext'
 
 const SORT_OPTIONS = [
   { value: 'bypopularity', label: 'Popularity', icon: TrendingUp },
@@ -15,12 +17,14 @@ const SORT_OPTIONS = [
 ]
 
 export default function HomePage() {
+  const { settings } = useSettings()
   const [searchParams] = useSearchParams()
   const searchQuery = searchParams.get('search') || ''
   const genreId = searchParams.get('genre') || ''
   const genreName = searchParams.get('genreName') || ''
 
   const [anime, setAnime] = useState([])
+  const [trendingAnime, setTrendingAnime] = useState([])
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [hasMore, setHasMore] = useState(true)
@@ -46,22 +50,31 @@ export default function HomePage() {
 
     const loadData = async () => {
       try {
-        let result
+        let fetchedAnime = []
+        let hasNextPage = false
+
         if (searchQuery) {
-          result = await searchAnime(searchQuery, page)
+          const { anime, pagination } = await searchAnime(searchQuery, page, settings.nsfwFilter)
+          fetchedAnime = anime
+          hasNextPage = pagination?.has_next_page || false
         } else if (genreId) {
-          result = await fetchAnimeByGenre(genreId, page)
+          const { anime, pagination } = await fetchAnimeByGenre(genreId, page, settings.nsfwFilter)
+          fetchedAnime = anime
+          hasNextPage = pagination?.has_next_page || false
         } else {
-          result = await fetchTopAnime(page, sort === 'score' ? 'bypopularity' : sort)
+          // If sort is 'score', we pass null to fetchTopAnime to get Jikan's default score-based top list
+          const { anime, pagination } = await fetchTopAnime(page, sort === 'score' ? null : sort, 'tv', settings.nsfwFilter)
+          fetchedAnime = anime
+          hasNextPage = pagination?.has_next_page || false
         }
 
-        let newAnime = result.anime || []
+        let newAnime = fetchedAnime || []
         if (sort === 'score' && !searchQuery && !genreId) {
           newAnime = [...newAnime].sort((a, b) => (b.score || 0) - (a.score || 0))
         }
 
         setAnime(prev => page === 1 ? newAnime : [...prev, ...newAnime])
-        setHasMore(result.pagination?.has_next_page || false)
+        setHasMore(hasNextPage)
       } catch (err) {
         console.error('Failed to fetch anime:', err)
       } finally {
@@ -72,6 +85,19 @@ export default function HomePage() {
 
     loadData()
   }, [page, searchQuery, genreId, sort])
+
+  // Fetch specialized trending data for the sidebar once
+  useEffect(() => {
+    const fetchTrending = async () => {
+      try {
+        const result = await fetchTopAnime(1, 'bypopularity')
+        setTrendingAnime(result.anime?.slice(0, 10) || [])
+      } catch (err) {
+        console.error('Failed to fetch trending sidebar data:', err)
+      }
+    }
+    fetchTrending()
+  }, [])
 
   const lastCardRef = useCallback((node) => {
     if (loading) return
@@ -89,8 +115,7 @@ export default function HomePage() {
   
   // Spotlight and Trending logic
   const featuredAnime = useMemo(() => anime[0] || null, [anime])
-  const trendingAnime = useMemo(() => anime.slice(0, 10), [anime])
-  const gridAnime = useMemo(() => (searchQuery || genreId) ? anime : anime.slice(1), [anime, searchQuery, genreId])
+  const gridAnime = useMemo(() => anime.slice(1), [anime])
 
   return (
     <motion.div
@@ -110,15 +135,18 @@ export default function HomePage() {
           {/* Main Content Area */}
           <div className="flex-1 min-w-0">
             {/* Header / Filter Row */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-black text-white italic tracking-tighter uppercase flex items-center gap-3">
-                  {searchQuery ? <><Sparkles className="w-6 h-6 text-violet" /> Results for "{searchQuery}"</> :
-                   genreId ? <><TrendingUp className="w-6 h-6 text-emerald" /> {genreName || 'Genre'}</> :
-                   <><TrendingUp className="w-6 h-6 text-violet" /> Recently Updated</>}
-                </h1>
-                <p className="text-xs text-neutral-500 font-bold uppercase tracking-widest mt-1 opacity-60">
-                  {searchQuery ? 'Search results from Jikan v4' : 'Explore the latest from our database'}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-12">
+              <div className="space-y-1">
+                <div className="flex items-center gap-3">
+                  <div className="w-1.5 h-8 bg-gradient-to-b from-accent to-accent rounded-full shadow-[0_0_15px_rgba(139,92,246,0.5)]" />
+                  <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tighter uppercase">
+                    {searchQuery ? <><span className="text-accent">{uiStrings.home.resultsFor}</span> "{searchQuery}"</> :
+                     genreId ? <><span className="text-emerald">{genreName || 'Genre'}</span> {uiStrings.home.genreSpotlight}</> :
+                     <>{uiStrings.home.trendingTitle.split(' ')[0]} <span className="text-gradient">{uiStrings.home.trendingTitle.split(' ')[1]}</span></>}
+                  </h1>
+                </div>
+                <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-[0.4em] ml-4 opacity-50">
+                  {searchQuery ? 'Global database search' : 'Handpicked for your entertainment'}
                 </p>
               </div>
 
@@ -126,30 +154,43 @@ export default function HomePage() {
                 <div className="relative">
                   <button
                     onClick={() => setSortOpen(!sortOpen)}
-                    className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-surface border border-border text-xs font-black uppercase tracking-widest text-neutral-400 hover:text-white hover:border-violet/40 transition-all duration-300"
+                    className="flex items-center gap-4 px-6 py-4 rounded-2xl glass-dark border border-white/5 text-[11px] font-black uppercase tracking-widest text-neutral-400 hover:text-white hover:border-accent/30 transition-all duration-500 shadow-xl group"
                   >
-                    <ArrowUpDown className="w-4 h-4" />
-                    Sort: {currentSort?.label}
+                    <ArrowUpDown className={`w-4 h-4 transition-transform duration-500 ${sortOpen ? 'rotate-180 text-accent' : ''}`} />
+                    <span>Sort By: <span className="text-white ml-2">{currentSort?.label}</span></span>
                   </button>
-                  {sortOpen && (
-                    <div className="absolute right-0 top-full mt-3 w-56 rounded-2xl glass border border-border overflow-hidden shadow-2xl z-40 transform-gpu animate-in fade-in slide-in-from-top-2">
-                      {SORT_OPTIONS.map(opt => {
-                        const Icon = opt.icon
-                        return (
-                          <button
-                            key={opt.value}
-                            onClick={() => { setSort(opt.value); setSortOpen(false) }}
-                            className={`w-full flex items-center gap-3 px-5 py-4 text-xs font-black uppercase tracking-widest text-left hover:bg-white/5 transition-colors ${
-                              sort === opt.value ? 'text-violet bg-violet/5' : 'text-neutral-400'
-                            }`}
-                          >
-                            <Icon className="w-4 h-4" />
-                            {opt.label}
-                          </button>
-                        )
-                      })}
-                    </div>
-                  )}
+                  <AnimatePresence>
+                    {sortOpen && (
+                      <motion.div 
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        className="absolute right-0 top-full mt-4 w-64 rounded-3xl glass-dark border border-white/10 overflow-hidden shadow-[0_25px_60px_rgba(0,0,0,0.8)] z-50 p-2"
+                      >
+                        {SORT_OPTIONS.map(opt => {
+                          const Icon = opt.icon
+                          const isActive = sort === opt.value
+                          return (
+                            <button
+                              key={opt.value}
+                              onClick={() => { setSort(opt.value); setSortOpen(false) }}
+                              className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl text-[11px] font-black uppercase tracking-widest text-left transition-all duration-300 ${
+                                isActive 
+                                ? 'bg-accent/10 text-accent border border-accent/20 shadow-inner shadow-accent/5' 
+                                : 'text-neutral-500 hover:bg-white/5 hover:text-white'
+                              }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <Icon className="w-4 h-4" />
+                                {opt.label}
+                              </div>
+                              {isActive && <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />}
+                            </button>
+                          )
+                        })}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               )}
             </div>
@@ -164,13 +205,32 @@ export default function HomePage() {
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 sm:gap-6">
+                <motion.div 
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true, margin: "-100px" }}
+                  variants={{
+                    visible: { transition: { staggerChildren: 0.05 } }
+                  }}
+                  className={`grid ${
+                    settings.gridDensity === 'compact' ? 'grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4' :
+                    settings.gridDensity === 'spacious' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10' :
+                    'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6'
+                  }`}
+                >
                   {gridAnime.map((a, i) => (
-                    <div key={`${a.mal_id}-${i}`} ref={i === gridAnime.length - 1 ? lastCardRef : null}>
-                      <AnimeCard anime={a} index={i % 24} />
-                    </div>
+                    <motion.div 
+                      key={`${a.mal_id}-${i}`} 
+                      ref={i === gridAnime.length - 1 ? lastCardRef : null}
+                      variants={{
+                        hidden: { opacity: 0, y: 30 },
+                        visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.33, 1, 0.68, 1] } }
+                      }}
+                    >
+                      <AnimeCard anime={a} index={i % 20} />
+                    </motion.div>
                   ))}
-                </div>
+                </motion.div>
 
                 {loading && page > 1 && (
                   <div className="mt-8">

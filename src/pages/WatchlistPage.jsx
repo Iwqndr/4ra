@@ -14,12 +14,16 @@ export default function WatchlistPage() {
       transition={{ duration: 0.3 }}
       className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pb-16"
     >
-      <div className="flex items-center gap-3 mb-6">
-        <Heart className="w-6 h-6 text-rose-500 fill-rose-500" />
-        <h1 className="text-2xl sm:text-3xl font-bold text-white" id="watchlist-title">
-          My List
-        </h1>
-        <span className="text-sm text-neutral-400 ml-2">({watchlist.length} titles)</span>
+      <div className="flex flex-col gap-2 mb-12">
+        <div className="flex items-center gap-4">
+          <div className="w-1.5 h-8 bg-gradient-to-b from-rose-500 to-rose-700 rounded-full shadow-[0_0_15px_rgba(244,63,94,0.4)]" />
+          <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tighter uppercase">
+            My <span className="text-rose-500">Collection</span>
+          </h1>
+        </div>
+        <p className="text-[10px] text-neutral-500 font-black uppercase tracking-[0.4em] ml-6 opacity-50">
+          Saved for your next cinematic journey • {watchlist.length} titles
+        </p>
       </div>
 
       {watchlist.length === 0 ? (

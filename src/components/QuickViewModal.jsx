@@ -19,14 +19,14 @@ export default function QuickViewModal({ anime }) {
       <div className="flex justify-between items-start mb-3">
         <div className="flex flex-col gap-1">
           {anime.studios?.length > 0 && (
-            <span className="text-[10px] font-bold text-violet uppercase tracking-wider">
+            <span className="text-[10px] font-bold text-accent uppercase tracking-wider">
               {anime.studios[0].name}
             </span>
           )}
           <h4 className="text-sm font-bold text-white leading-snug">{anime.title}</h4>
         </div>
         {anime.score && (
-          <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-violet/20 border border-violet/30 text-[10px] font-bold text-violet">
+          <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-accent/20 border border-accent/30 text-[10px] font-bold text-accent">
             <Star className="w-3 h-3 fill-current" />
             {anime.score}
           </div>

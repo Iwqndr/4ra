@@ -81,39 +81,45 @@ export default function RecommendPage() {
       className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pb-16"
     >
       {/* Header */}
-      <div className="text-center max-w-2xl mx-auto mb-10">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet/10 border border-violet/20 text-violet text-sm font-medium mb-4">
-          <Sparkles className="w-4 h-4" />
-          AI-Powered Recommendations
-        </div>
-        <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3" id="recommend-title">
-          What do you feel like watching?
+      <div className="text-center max-w-3xl mx-auto mb-16">
+        <motion.div 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-accent/10 border border-accent/20 text-accent text-[10px] font-black uppercase tracking-[0.2em] mb-8 shadow-lg shadow-accent/5"
+        >
+          <Sparkles className="w-4 h-4 fill-current" />
+          AI-Powered Insights
+        </motion.div>
+        
+        <h1 className="text-4xl sm:text-6xl font-black text-white tracking-tighter leading-[0.95] mb-6 uppercase" id="recommend-title">
+          What are you in the <span className="text-gradient">mood</span> for?
         </h1>
-        <p className="text-neutral-400 text-sm">
-          Describe the kind of anime you're in the mood for, and our AI will find the perfect match.
+        <p className="text-xs text-neutral-500 font-bold uppercase tracking-[0.3em] opacity-60">
+          Describe your vibe, and our AI will architect the perfect watchlist.
         </p>
       </div>
 
-      {/* Input */}
-      <div className="max-w-2xl mx-auto mb-8">
-        <div className="relative">
+      {/* Input Section */}
+      <div className="max-w-3xl mx-auto mb-12">
+        <div className="relative group">
+          <div className="absolute -inset-1 bg-gradient-to-r from-accent to-accent rounded-[28px] blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
           <input
             type="text"
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-            placeholder="e.g., I want a sad romance set in school..."
-            className="w-full px-6 py-4 pr-14 rounded-2xl bg-surface border border-border text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-violet/50 focus:border-violet text-sm transition-all duration-300"
+            placeholder="e.g., A dark psychological thriller with philosophical themes..."
+            className="relative w-full px-8 py-6 pr-20 rounded-[24px] glass-dark border border-white/10 text-white placeholder:text-neutral-600 focus:outline-none focus:border-accent/50 text-[15px] font-bold transition-all duration-500 shadow-2xl"
             id="ai-prompt-input"
             disabled={loading}
           />
           <button
             onClick={() => handleSubmit()}
             disabled={loading || !prompt.trim()}
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-2.5 rounded-xl bg-violet text-white hover:bg-violet/80 disabled:opacity-40 disabled:hover:bg-violet transition-all duration-300"
+            className="absolute right-4 top-1/2 -translate-y-1/2 p-3.5 rounded-2xl bg-white text-black hover:bg-accent hover:text-white disabled:opacity-20 transition-all duration-500 shadow-xl active:scale-90"
             id="ai-submit-btn"
           >
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+            {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Send className="w-6 h-6" />}
           </button>
         </div>
 
@@ -124,7 +130,7 @@ export default function RecommendPage() {
               key={i}
               onClick={() => { setPrompt(ex); handleSubmit(ex) }}
               disabled={loading}
-              className="px-3 py-1.5 rounded-full text-xs font-medium bg-white/5 text-neutral-400 border border-border hover:text-violet hover:border-violet/30 transition-all duration-300 disabled:opacity-40"
+              className="px-3 py-1.5 rounded-full text-xs font-medium bg-white/5 text-neutral-400 border border-border hover:text-accent hover:border-accent/30 transition-all duration-300 disabled:opacity-40"
             >
               {ex}
             </button>

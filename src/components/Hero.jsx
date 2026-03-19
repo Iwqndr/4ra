@@ -1,10 +1,18 @@
 import { motion } from 'framer-motion'
-import { Info, Plus, Star, Calendar, ShieldCheck, Play } from 'lucide-react'
+import { Info, Plus, Star, Calendar, ShieldCheck, Play, Sparkles } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useWatchlist } from '../context/WatchlistContext'
+import { useModal } from '../context/ModalContext'
+import MediaListModal from './MediaListModal'
+import { useState } from 'react'
+import { ListPlus } from 'lucide-react'
+import uiStrings from '../config/ui_strings.json'
+import { useSettings } from '../context/SettingsContext'
 
 export default function Hero({ anime }) {
   const { isInWatchlist, toggleWatchlist } = useWatchlist()
+  const { openMediaModal } = useModal()
+  const { getTranslatedTitle } = useSettings()
   if (!anime) return null
 
   const inList = isInWatchlist(anime.mal_id)
@@ -14,89 +22,95 @@ export default function Hero({ anime }) {
   const genres = anime.genres?.slice(0, 3).map(g => g.name).join(', ')
 
   return (
-    <div className="relative w-full h-[500px] sm:h-[600px] lg:h-[750px] overflow-hidden group">
-      {/* Background Image with Cinematic Gradient */}
+    <div className="relative w-full h-[600px] sm:h-[700px] lg:h-[850px] overflow-hidden group">
+      {/* Cinematic Background */}
       <div className="absolute inset-0">
-        <img 
+        <motion.img 
+          initial={{ scale: 1.1 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 10, ease: "easeOut" }}
           src={banner} 
           alt={anime.title} 
-          className="w-full h-full object-cover object-top scale-105 group-hover:scale-100 transition-transform duration-[2s] ease-out"
+          className="w-full h-full object-cover object-top opacity-60"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-base via-base/80 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-base via-base/60 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-base via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-black/20" />
       </div>
 
       {/* Content Area */}
-      <div className="relative h-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-center">
+      <div className="relative h-full max-w-[1800px] mx-auto px-6 sm:px-12 lg:px-20 flex flex-col justify-center">
         <motion.div 
-          initial={{ opacity: 0, x: -50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="max-w-3xl"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: [0.33, 1, 0.68, 1] }}
+          className="max-w-4xl"
         >
-          {/* Spotlight Rank */}
-          <div className="flex items-center gap-2 mb-6 text-[#ff5e3a] font-black text-sm uppercase tracking-[0.2em]">
-            <Star className="w-4 h-4 fill-current" />
-            Spotlight #1
+          {/* Active Badge */}
+          <div className="flex items-center gap-3 mb-8">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent/10 border border-accent/30 text-accent text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-accent/10">
+              <Sparkles className="w-3.5 h-3.5 fill-current" />
+              {uiStrings.home.featuredTitle} #1
+            </div>
+            <div className="h-0.5 w-12 bg-white/10 rounded-full" />
+            <span className="text-[10px] font-black text-neutral-500 uppercase tracking-[0.3em]">{uiStrings.home.heroCollection}</span>
+          </div>
+               <div className="flex flex-col gap-4">
+                 <h1 className="text-5xl md:text-7xl font-black text-white tracking-tighter leading-[0.9] max-w-3xl line-clamp-2">
+                   {getTranslatedTitle(anime)}
+                 </h1>
+               </div>
+
+          {/* Quick Stats Row */}
+          <div className="flex flex-wrap items-center gap-6 mb-10">
+            <div className="flex items-center gap-3 px-4 py-2 rounded-2xl glass-dark border border-white/5 shadow-xl">
+              <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+              <span className="text-sm font-black text-white">{anime.score}</span>
+            </div>
+            <div className="flex items-center gap-3 text-xs font-black uppercase tracking-widest text-neutral-400">
+               <span className="flex items-center gap-2 text-emerald">
+                 <span className="w-1.5 h-1.5 rounded-full bg-emerald animate-pulse" />
+                 {anime.type || 'TV Series'}
+               </span>
+               <span className="w-1 h-1 rounded-full bg-neutral-700" />
+               <span>{year}</span>
+               <span className="w-1 h-1 rounded-full bg-neutral-700" />
+               <span className="text-accent">{genres}</span>
+            </div>
           </div>
 
-          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-white mb-6 leading-[1.1] drop-shadow-2xl">
-            {anime.title}
-          </h1>
-
-          {/* Icon Metadata Row */}
-          <div className="flex flex-wrap items-center gap-5 mb-8 text-xs font-black uppercase tracking-widest text-neutral-300">
-            <span className="flex items-center gap-2 px-3 py-1 rounded-md bg-[#ff5e3a] text-white shadow-lg shadow-orange-500/20">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              {rating}
-            </span>
-            <span className="flex items-center gap-2 text-emerald">
-              <span className="w-2 h-2 rounded-full bg-emerald animate-pulse" />
-              TV Series
-            </span>
-            <span className="text-neutral-500 font-bold">{genres}</span>
-          </div>
-
-          {/* Synopsis with better typography */}
-          <p className="text-neutral-300 text-sm sm:text-lg leading-relaxed mb-10 line-clamp-3 max-w-2xl opacity-90 font-medium italic">
+          <div className="text-neutral-300 text-lg sm:text-xl leading-relaxed mb-12 line-clamp-3 max-w-2xl font-medium italic opacity-80 border-l-2 border-white/5 pl-8">
             {anime.synopsis}
-          </p>
-
-          {/* Featured Metadata Cards from Reference */}
-          <div className="flex flex-wrap gap-4 mb-10">
-            <div className="flex flex-col gap-1.5 px-6 py-3 rounded-2xl bg-surface/40 backdrop-blur-xl border border-white/5 min-w-[110px] transform-gpu transition-all hover:bg-surface/60 hover:scale-105">
-              <span className="text-[10px] text-neutral-500 font-black uppercase tracking-widest">Rating</span>
-              <span className="text-lg font-black text-white">{rating}</span>
-            </div>
-            <div className="flex flex-col gap-1.5 px-6 py-3 rounded-2xl bg-surface/40 backdrop-blur-xl border border-white/5 min-w-[110px] transform-gpu transition-all hover:bg-surface/60 hover:scale-105">
-              <span className="text-[10px] text-neutral-500 font-black uppercase tracking-widest">Release</span>
-              <span className="text-lg font-black text-white">{year}</span>
-            </div>
-            <div className="flex flex-col gap-1.5 px-6 py-3 rounded-2xl bg-surface/40 backdrop-blur-xl border border-white/5 min-w-[110px] transform-gpu transition-all hover:bg-surface/60 hover:scale-105">
-              <span className="text-[10px] text-neutral-500 font-black uppercase tracking-widest">Quality</span>
-              <span className="text-lg font-black text-white">4K UHD</span>
-            </div>
           </div>
 
-          {/* Actions */}
-          <div className="flex flex-wrap gap-5">
+          {/* Premium Actions */}
+          <div className="flex flex-wrap gap-6 items-center">
             <Link 
               to={`/anime/${anime.mal_id}`}
-              className="group flex items-center gap-4 px-10 py-5 rounded-3xl bg-[#ff5e3a] hover:bg-[#ff7e60] text-white font-black text-sm uppercase tracking-widest transition-all duration-300 hover:scale-105 shadow-[0_15px_30px_rgba(255,94,58,0.3)] transform-gpu"
+              className="group flex items-center gap-4 px-12 py-6 rounded-[32px] bg-white text-black font-black text-[13px] uppercase tracking-widest transition-all duration-500 hover:scale-105 hover:bg-accent hover:text-white shadow-2xl shadow-white/5 active:scale-95"
             >
-              <Info className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-              View Full Details
+              <Info className="w-5 h-5 transition-transform group-hover:scale-125" />
+              {uiStrings.home.heroStartWatching}
             </Link>
+            
             <button 
               onClick={() => toggleWatchlist(anime)}
-              className={`flex items-center justify-center gap-4 px-8 py-5 rounded-3xl font-black text-sm uppercase tracking-widest transition-all duration-300 hover:scale-105 border transform-gpu ${
+              className={`flex items-center justify-center gap-4 px-10 py-6 rounded-[32px] glass-dark border font-black text-[13px] uppercase tracking-widest transition-all duration-500 hover:scale-105 active:scale-95 ${
                 inList 
-                ? 'bg-rose-600 shadow-lg shadow-rose-600/20 text-white border-transparent' 
-                : 'bg-white/10 text-white border-white/10 backdrop-blur-md hover:bg-white/20'
+                ? 'bg-rose-500 shadow-xl shadow-rose-500/30 text-white border-rose-400' 
+                : 'text-white border-white/10 hover:bg-white/5'
               }`}
             >
-              <Plus className={`w-5 h-5 ${inList ? 'rotate-45' : ''} transition-transform`} />
-              {inList ? 'Saved in List' : 'Add to Watchlist'}
+              <Plus className={`w-5 h-5 ${inList ? 'rotate-45' : ''} transition-transform duration-500`} />
+              {inList ? uiStrings.home.heroSaved : uiStrings.home.heroAddToList}
+            </button>
+
+            <button 
+              onClick={() => openMediaModal(anime)}
+              className="p-6 rounded-[32px] glass-dark border border-white/10 text-neutral-400 hover:text-white hover:border-accent/40 hover:bg-accent/5 transition-all duration-500 group"
+              title="Track on AniList"
+            >
+              <ListPlus className="w-5 h-5 group-hover:scale-125 transition-transform" />
             </button>
           </div>
         </motion.div>
