@@ -188,7 +188,7 @@ const AniListManager = forwardRef(({ onUserUpdate, profileData, setProfileData }
 
       const clientId = "37352";
       const clientSecret = 'wFsK0V8n3B6QvZFw0AspliudyHlOwVRoeqeaSGO2';
-      const redirectUri = 'http://10.0.0.124:81/settings';
+      const redirectUri = window.location.origin + '/settings';
       const body = `grant_type=authorization_code&client_id=${clientId}&client_secret=${clientSecret}&redirect_uri=${encodeURIComponent(redirectUri)}&code=${rawVal}`;
 
       try {
