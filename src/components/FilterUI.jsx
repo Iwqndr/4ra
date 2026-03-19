@@ -1,7 +1,10 @@
 import { X, Check, SlidersHorizontal, RotateCcw } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { createPortal } from 'react-dom'
 import uiStrings from '../config/ui_strings.json'
 
 const FILTER_CATEGORIES = [
+  // ... (keep categories)
   {
     id: 'season',
     label: 'Season',
@@ -49,74 +52,71 @@ export default function FilterUI({ selectedFilters, onFilterChange, onClose }) {
     onFilterChange('genres', updated)
   }
 
-  return (
+  const modalContent = (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-[#0B0C0E]/90 backdrop-blur-2xl overflow-y-auto">
         {/* Overlay */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+          className="fixed inset-0 cursor-pointer"
         />
 
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="relative w-full max-w-5xl bg-surface/90 backdrop-blur-3xl border border-white/10 rounded-[48px] shadow-[0_40px_100px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col max-h-[90vh]"
+          className="relative w-full max-w-2xl bg-[#16171a]/98 backdrop-blur-3xl border border-white/10 rounded-[40px] shadow-[0_40px_100px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col max-h-[90vh] z-10"
         >
           {/* Header - Fixed */}
-          <div className="flex items-center justify-between p-8 sm:p-10 border-b border-white/5 bg-white/[0.02]">
-            <div className="flex items-center gap-5">
-              <div className="p-3 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center shadow-lg shadow-accent/5">
-                <SlidersHorizontal className="w-6 h-6 text-accent" />
+          <div className="flex items-center justify-between p-6 sm:p-8 border-b border-white/5 bg-white/[0.02]">
+            <div className="flex items-center gap-4">
+              <div className="p-2.5 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center shadow-lg shadow-accent/5">
+                <SlidersHorizontal className="w-5 h-5 text-accent" />
               </div>
               <div className="flex flex-col">
-                <h3 className="text-2xl font-black text-white tracking-tighter uppercase italic leading-none">{uiStrings.filter.title}</h3>
-                <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest mt-1 opacity-60">Discovery Engine</p>
+                <h3 className="text-xl font-black text-white tracking-tighter uppercase italic leading-none">{uiStrings.filter.title}</h3>
+                <p className="text-[9px] text-neutral-500 font-bold uppercase tracking-widest mt-1 opacity-60">Discovery Engine</p>
               </div>
             </div>
             <button 
               onClick={onClose}
-              className="p-3 rounded-full hover:bg-rose-500/10 text-neutral-400 hover:text-rose-500 transition-all hover:rotate-90 border border-transparent hover:border-rose-500/20"
+              className="p-2.5 rounded-full hover:bg-rose-500/10 text-neutral-400 hover:text-rose-500 transition-all hover:rotate-90"
             >
-              <X className="w-6 h-6" />
+              <X className="w-5 h-5" />
             </button>
           </div>
 
           {/* Scrollable Content */}
-          <div className="flex-1 overflow-y-auto p-8 sm:p-12 space-y-16 custom-scrollbar scroll-smooth">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
+          <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-10 custom-scrollbar scroll-smooth">
+            <div className="grid grid-cols-2 gap-8">
               {FILTER_CATEGORIES.map((cat) => (
-                <div key={cat.id} className="flex flex-col gap-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-1.5 h-4 bg-accent/40 rounded-full" />
-                    <span className="text-[11px] font-black text-neutral-400 uppercase tracking-[0.2em]">{cat.label}</span>
+                <div key={cat.id} className="flex flex-col gap-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-1 h-3 bg-accent/40 rounded-full" />
+                    <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">{cat.label}</span>
                   </div>
-                  <div className="flex flex-col gap-2.5">
+                  <div className="flex flex-col gap-1.5">
                     {cat.options.map((opt) => (
                       <button
                         key={opt}
                         onClick={() => toggleFilter(cat.id, opt)}
-                        className={`flex items-center gap-4 px-5 py-4 rounded-[20px] text-sm font-bold transition-all duration-500 relative overflow-hidden group ${
+                        className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-[12px] font-bold transition-all duration-300 ${
                           (selectedFilters[cat.id] || []).includes(opt)
-                            ? 'bg-accent/15 text-white border-accent/30 border shadow-2xl shadow-accent/10'
-                            : 'text-neutral-500 hover:text-white hover:bg-white/[0.03] border border-transparent hover:border-white/10'
+                            ? 'bg-accent/10 text-white border-accent/20 border'
+                            : 'text-neutral-500 hover:text-white hover:bg-white/[0.03]'
                         }`}
                       >
-                        <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all duration-500 ${
+                        <div className={`w-4 h-4 rounded-md border-2 flex items-center justify-center transition-all ${
                           (selectedFilters[cat.id] || []).includes(opt) 
                           ? 'border-accent bg-accent' 
-                          : 'border-white/10 bg-white/5 group-hover:border-neutral-600'
+                          : 'border-white/10 bg-white/5'
                         }`}>
-                          {(selectedFilters[cat.id] || []).includes(opt) && <Check className="w-3.5 h-3.5 text-white" />}
+                          {(selectedFilters[cat.id] || []).includes(opt) && <Check className="w-2.5 h-2.5 text-white" />}
                         </div>
-                        <span className="relative z-10">{opt}</span>
-                        {(selectedFilters[cat.id] || []).includes(opt) && (
-                          <motion.div layoutId={`glow-${cat.id}-${opt}`} className="absolute inset-0 bg-gradient-to-r from-accent/5 to-transparent pointer-events-none" />
-                        )}
+                        <span>{opt}</span>
                       </button>
                     ))}
                   </div>
@@ -124,20 +124,20 @@ export default function FilterUI({ selectedFilters, onFilterChange, onClose }) {
               ))}
             </div>
 
-            <div className="relative">
-              <div className="flex items-center gap-3 mb-8">
-                <div className="w-1.5 h-4 bg-emerald/40 rounded-full" />
-                <span className="text-[11px] font-black text-neutral-400 uppercase tracking-[0.2em]">Genres Spotlight</span>
+            <div className="relative pt-4 border-t border-white/5">
+              <div className="flex items-center gap-2 mb-6">
+                <div className="w-1 h-3 bg-emerald/40 rounded-full" />
+                <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Genres Spotlight</span>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                 {GENRES.map((genre) => (
                   <button
                     key={genre}
                     onClick={() => toggleGenre(genre)}
-                    className={`px-6 py-4 rounded-[20px] text-[11px] font-black uppercase tracking-widest transition-all duration-500 border relative group ${
+                    className={`px-3 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all duration-300 border ${
                       (selectedFilters.genres || []).includes(genre)
-                        ? 'bg-emerald/15 text-emerald border-emerald/30 shadow-2xl shadow-emerald/10 scale-[1.02]'
-                        : 'text-neutral-500 hover:text-neutral-300 bg-white/[0.02] border-white/5 hover:border-white/20'
+                        ? 'bg-emerald/10 text-emerald border-emerald/20 shadow-lg shadow-emerald/5'
+                        : 'text-neutral-500 hover:text-neutral-300 bg-white/[0.01] border-white/5'
                     }`}
                   >
                     {genre}
@@ -148,24 +148,25 @@ export default function FilterUI({ selectedFilters, onFilterChange, onClose }) {
           </div>
 
           {/* Footer - Fixed */}
-          <div className="p-8 sm:p-10 border-t border-white/5 bg-white/[0.02] flex items-center justify-between gap-6 relative z-10">
+          <div className="p-6 sm:p-8 border-t border-white/5 bg-white/[0.01] flex items-center justify-between gap-4">
             <button 
               onClick={() => onFilterChange('reset', {})}
-              className="group flex items-center gap-3 px-8 py-4 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] text-neutral-500 hover:text-rose-400 hover:bg-rose-500/5 transition-all border border-transparent hover:border-rose-500/10"
+              className="group flex items-center gap-2 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest text-neutral-500 hover:text-rose-400 transition-all border border-transparent hover:border-rose-500/10"
             >
-              <RotateCcw className="w-4 h-4 group-hover:rotate-[-180deg] transition-transform duration-700" />
-              Reset Engine
+              <RotateCcw className="w-3.5 h-3.5 group-hover:rotate-[-180deg] transition-transform duration-700" />
+              Reset
             </button>
             <button 
               onClick={onClose}
-              className="relative group px-14 py-5 rounded-[24px] bg-white text-black font-black text-[12px] uppercase tracking-[0.3em] hover:bg-accent hover:text-white transition-all duration-700 hover:scale-105 active:scale-95 shadow-2xl shadow-white/5 overflow-hidden"
+              className="px-10 py-4 rounded-2xl bg-white text-black font-black text-[11px] uppercase tracking-widest hover:bg-accent hover:text-white transition-all shadow-xl active:scale-95"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-accent to-accent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <span className="relative z-10">Initialize Scan</span>
+              Apply Changes
             </button>
           </div>
         </motion.div>
       </div>
     </AnimatePresence>
   )
+
+  return createPortal(modalContent, document.body)
 }

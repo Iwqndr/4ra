@@ -82,32 +82,30 @@ export default function Navbar() {
                 className="w-full pl-14 pr-6 py-4 rounded-[22px] bg-white/[0.03] border border-white/5 text-[15px] text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent/30 focus:bg-white/[0.05] transition-all duration-500 backdrop-blur-xl font-medium"
               />
               
-              {/* Filter Button - Integrated */}
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className={`absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-500 ${
-                  showFilters 
-                  ? 'bg-accent text-white shadow-lg shadow-accent/40' 
-                  : 'text-neutral-500 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <SlidersHorizontal className="w-3.5 h-3.5" />
-                <span className="hidden lg:inline">Filters</span>
-              </button>
+                {/* Filter Button - Integrated */}
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={`absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-500 ${
+                    showFilters 
+                    ? 'bg-accent text-white shadow-lg shadow-accent/40' 
+                    : 'text-neutral-500 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <SlidersHorizontal className="w-3.5 h-3.5" />
+                  <span className="hidden lg:inline">Filters</span>
+                </button>
+              </div>
             </div>
 
             <AnimatePresence>
-              {showFilters && (
-                <div className="absolute top-full right-0 mt-4 w-full">
-                  <FilterUI 
-                    selectedFilters={selectedFilters} 
-                    onFilterChange={handleFilterChange}
-                    onClose={() => setShowFilters(false)}
-                  />
-                </div>
-              )}
+               {showFilters && (
+                 <FilterUI 
+                   selectedFilters={selectedFilters} 
+                   onFilterChange={handleFilterChange}
+                   onClose={() => setShowFilters(false)}
+                 />
+               )}
             </AnimatePresence>
-          </div>
 
           {/* Navigation Links */}
           <div className="hidden lg:flex items-center gap-4">

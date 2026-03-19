@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Copy, Check, Share2, Twitter, MessageCircle, Globe } from 'lucide-react';
 import { useModal } from '../context/ModalContext';
 import uiStrings from '../config/ui_strings.json';
-import { ShareToChatButton } from '../pages/ChatPage';
+import { ShareToChatButton } from '../pages/ChatPage.jsx';
 
 export default function ShareModal() {
   const { isShareModalOpen, closeShareModal, activeAnime } = useModal();

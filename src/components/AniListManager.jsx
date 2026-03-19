@@ -18,7 +18,7 @@ const AniListManager = forwardRef(({ onUserUpdate, profileData, setProfileData }
   useImperativeHandle(ref, () => ({
     syncProfile: async (newBio) => {
       if (!token) return { success: false, message: "Not logged in" };
-      
+
       setIsSyncing(true);
       const query = `
         mutation ($about: String) {
@@ -39,7 +39,7 @@ const AniListManager = forwardRef(({ onUserUpdate, profileData, setProfileData }
         });
         const data = await res.json();
         if (data.errors) throw new Error(data.errors[0].message);
-        
+
         setLoginStatus('Bio synced to AniList!');
         return { success: true };
       } catch (err) {
@@ -188,7 +188,7 @@ const AniListManager = forwardRef(({ onUserUpdate, profileData, setProfileData }
 
       const clientId = "37352";
       const clientSecret = 'wFsK0V8n3B6QvZFw0AspliudyHlOwVRoeqeaSGO2';
-      const redirectUri = 'http://localhost:81/settings';
+      const redirectUri = 'http://10.0.0.124:81/settings';
       const body = `grant_type=authorization_code&client_id=${clientId}&client_secret=${clientSecret}&redirect_uri=${encodeURIComponent(redirectUri)}&code=${rawVal}`;
 
       try {
@@ -236,7 +236,7 @@ const AniListManager = forwardRef(({ onUserUpdate, profileData, setProfileData }
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-black text-white uppercase tracking-wider italic">AniList Sync</h2>
         {isLoggedIn && (
-          <button 
+          <button
             onClick={handleLogout}
             className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-rose-500/10 text-rose-500 text-[10px] font-black uppercase tracking-widest hover:bg-rose-500/20 transition-all border border-rose-500/20"
           >
@@ -282,14 +282,14 @@ const AniListManager = forwardRef(({ onUserUpdate, profileData, setProfileData }
             <p className="text-neutral-500 text-[10px] font-bold max-w-[200px]">Sync your watching progress instantly</p>
           </div>
           <div className="flex flex-col items-center gap-3 w-full">
-            <button 
+            <button
               onClick={handleLogin}
               className="w-full py-3 rounded-xl bg-accent hover:bg-accent-hover text-white font-black text-[10px] uppercase tracking-[0.2em] transition-all duration-300 hover:scale-[1.02] shadow-lg shadow-accent/20"
             >
               Sign in with AniList
             </button>
-            
-            <button 
+
+            <button
               onClick={() => setIsManual(!isManual)}
               className="text-[9px] font-black uppercase tracking-widest text-neutral-500 hover:text-white transition-colors"
             >
@@ -301,14 +301,14 @@ const AniListManager = forwardRef(({ onUserUpdate, profileData, setProfileData }
                 <p className="text-[8px] font-black text-neutral-500 uppercase tracking-widest">
                   {manualTokenInput ? 'Code detected!' : 'Enter code or token'}
                 </p>
-                <input 
+                <input
                   type="text"
                   value={manualTokenInput}
                   onChange={(e) => setManualTokenInput(e.target.value)}
                   placeholder="Paste here..."
                   className="w-full px-3 py-2 rounded-lg bg-base/50 border border-border text-[10px] focus:border-accent/50 outline-none transition-all font-bold"
                 />
-                <button 
+                <button
                   onClick={handleManualLogin}
                   disabled={isExchanging}
                   className={`w-full py-2.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${manualTokenInput ? 'bg-accent text-white' : 'bg-white/5 hover:bg-white/10 text-neutral-400'}`}

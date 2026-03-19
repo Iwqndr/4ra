@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&family=Open+Sans:wght@400;600;700;800&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -10,7 +11,7 @@
   --color-accent: var(--accent-color, #ff5e3a);
   --color-accent-hover: var(--accent-hover, #ff7e60);
   --color-glass-border: rgba(255, 255, 255, 0.05);
-  --font-sans: 'Outfit', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Open Sans', 'Lato', 'Outfit', 'Inter', ui-sans-serif, system-ui, sans-serif;
   --shadow-premium: 0 20px 50px rgba(0, 0, 0, 0.5);
   
   --blur-low: 8px;

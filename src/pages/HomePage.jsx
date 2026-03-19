@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowUpDown, TrendingUp, Star, Clock, Sparkles } from 'lucide-react'
 import { fetchTopAnime, searchAnime, fetchAnimeByGenre } from '../api/jikan'
+import { fetchTrendingAnime } from '../api/anilist'
 import AnimeCard from '../components/AnimeCard'
 import { SkeletonGrid } from '../components/SkeletonCard'
 import Hero from '../components/Hero'
@@ -86,12 +87,12 @@ export default function HomePage() {
     loadData()
   }, [page, searchQuery, genreId, sort])
 
-  // Fetch specialized trending data for the sidebar once
+  // Fetch specialized trending data (AniList Power)
   useEffect(() => {
     const fetchTrending = async () => {
       try {
-        const result = await fetchTopAnime(1, 'bypopularity')
-        setTrendingAnime(result.anime?.slice(0, 10) || [])
+        const result = await fetchTrendingAnime(10)
+        setTrendingAnime(result || [])
       } catch (err) {
         console.error('Failed to fetch trending sidebar data:', err)
       }
